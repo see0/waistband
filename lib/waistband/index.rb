@@ -12,7 +12,7 @@ module Waistband
       options = options.stringify_keys
 
       @index_name = index_name
-      @stringify = config['stringify']
+      @stringify = options['stringify'] ? options['version'] : false
 
       # subindexes checks
       if options['version'].present?
@@ -35,15 +35,13 @@ module Waistband
       client.indices.refresh index: config_name
     end
 
-    def update_all_mappings
-      responses = types.map do |type|
-        update_mapping(type).merge('_type' => type)
-      end
-    end
+    # def update_all_mappings
+    #   responses = types.map do |type|
+    #     update_mapping(type).merge('_type' => type)
+    #   end
+    # end
 
-    def update_mapping(type)
-      properties = config['mappings'][type]['properties'] || {}
-
+    def update_mapping(type, properties = {})
       mapping_hash = {type => {properties: properties}}
 
       client.indices.put_mapping(
@@ -53,21 +51,21 @@ module Waistband
       )
     end
 
-    def update_settings
+    def update_settings(settings)
       client.indices.put_settings(
         index: config_name,
         body: settings
       )
     end
 
-    def create
-      create!
+    def create(body)
+      create!(body)
     rescue ::Waistband::Errors::IndexExists => ex
       true
     end
 
-    def create!
-      client.indices.create index: config_name, body: config.except('name', 'stringify')
+    def create!(body)
+      client.indices.create index: config_name, body: body
     rescue Elasticsearch::Transport::Transport::Errors::BadRequest => ex
       raise ex unless ex.message.to_s =~ /IndexAlreadyExistsException/
       raise ::Waistband::Errors::IndexExists.new("Index already exists")
@@ -189,9 +187,9 @@ module Waistband
       )
     end
 
-    def config
-      ::Waistband.config.index @index_name
-    end
+    # def config
+    #   ::Waistband.config.index @index_name
+    # end
 
     def client
       @client ||= ::Waistband.config.client
@@ -223,16 +221,12 @@ module Waistband
       end
 
       def full_alias_name(alias_name)
-        unless custom_name?
-          "#{alias_name}_#{::Waistband.config.env}"
-        else
           alias_name
-        end
       end
 
-      def custom_name?
-        !!config['name']
-      end
+      # def custom_name?
+      #   !!config['name']
+      # end
 
       def stringify_all(data)
         data = if data.is_a? Array
@@ -245,26 +239,26 @@ module Waistband
         data
       end
 
-      def types
-        config.try(:[], 'mappings').try(:keys) || []
-      end
+      # def types
+      #   config.try(:[], 'mappings').try(:keys) || []
+      # end
 
       def default_type_name
         @index_name.singularize
       end
 
-      def settings
-        settings = config['settings']['index'].except('number_of_shards')
-        {index: settings}
-      end
+      # def settings
+      #   settings = config['settings']['index'].except('number_of_shards')
+      #   {index: settings}
+      # end
 
       def config_name
         @subs ? "#{base_config_name}__#{@subs.join('_')}" : base_config_name
       end
 
       def base_config_name
-        return config['name'] if config['name']
-        "#{@index_name}_#{::Waistband.config.env}"
+        # return config['name'] if config['name']
+        "#{@index_name}"
       end
 
     # /private
