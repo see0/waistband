@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/array/extract_options'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/core_ext/object/blank'

@@ -8,7 +8,6 @@ require 'waistband'
 require 'rspec'
 require 'timecop'
 require 'active_support/core_ext/integer/time'
-require 'debugger'
 
 Dir["#{APP_DIR}/spec/support/**/*.rb"].each {|f| require f}
 
@@ -19,15 +18,15 @@ RSpec.configure do |config|
       c.config_dir = "#{APP_DIR}/spec/config/waistband"
     end
   end
-
-  config.around(:each) do |example|
-    IndexHelper.create_all
-    example.run
-    IndexHelper.delete_all
-  end
-
-  config.after(:each) do
-    Timecop.return
-  end
+  #
+  # config.around(:each) do |example|
+  #   IndexHelper.create_all
+  #   example.run
+  #   IndexHelper.delete_all
+  # end
+  #
+  # config.after(:each) do
+  #   Timecop.return
+  # end
 
 end

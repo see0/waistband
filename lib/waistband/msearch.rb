@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/array/extract_options'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/core_ext/object/blank'
@@ -22,9 +23,9 @@ module Waistband
     end
 
     def perform
-      results = client.msearch body: @query_arr
+      results = client.msearch(body: query_body)
 
-      results.each_with_index.map do |v, k|
+      results['responses'].each_with_index.map do |v, k|
         if @query_arr[k][:from].present? && @query_arr[k][:size].present?
           ::Waistband::SearchResults.new(v, page: (@query_arr[k][:from]/@query_arr[k][:size]) + 1, page_size: @query_arr[k][:size])
         else
@@ -35,6 +36,16 @@ module Waistband
 
     def client
       @client ||= ::Waistband.config.client
+    end
+
+    private
+
+    def query_body
+      @query_arr.map do |e|
+        e[:search] = e[:body].to_hash
+        e.delete(:body)
+        e.to_hash
+      end
     end
 
   end
