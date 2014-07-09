@@ -5,7 +5,7 @@ require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/object/try'
 require 'elasticsearch'
 
-module WaistBand
+module Waistband
   class Msearch
 
     def initialize(query_arr=[])
