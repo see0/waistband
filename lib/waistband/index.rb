@@ -158,21 +158,14 @@ module Waistband
       )
     end
 
-    def msearch(query_arr)
-      query_arr.map! { |q| parse_search_body q }
-      search_hash = client.msearch body: query_arr
+    def search(body_hash)
+      search_hash = search_builder(body_hash)
+      search_hash = client.search(search_hash)
 
-      search_hash.each_with_index.map do |v, k|
-        if query_arr[k][:from].present? && query_arr[k][:size].present?
-          ::Waistband::SearchResults.new(v, page: (query_arr[k][:from]/query_arr[k][:size]) + 1, page_size: query_arr[k][:size])
-        else
-          ::Waistband::SearchResults.new(v)
-        end
-      end
+      ::Waistband::SearchResults.new(search_hash, page: page, page_size: page_size)
     end
 
-
-    def search(body_hash)
+    def search_builder(body_hash)
       page, page_size = get_page_info body_hash
       body_hash = parse_search_body(body_hash)
       search_hash = {index: config_name, body: body_hash}
@@ -180,9 +173,7 @@ module Waistband
       search_hash[:from] = body_hash[:from] if body_hash[:from]
       search_hash[:size] = body_hash[:size] if body_hash[:size]
 
-      search_hash = client.search(search_hash)
-
-      ::Waistband::SearchResults.new(search_hash, page: page, page_size: page_size)
+      search_hash
     end
 
     def alias(alias_name)
