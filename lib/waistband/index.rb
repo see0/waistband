@@ -10,7 +10,6 @@ module Waistband
 
     def initialize(index_name, options = {})
       options = options.stringify_keys
-
       @index_name = index_name
       @stringify = options['stringify'] ? options['version'] : false
 
@@ -25,6 +24,7 @@ module Waistband
         @subs = @subs.flatten if @subs.is_a?(Array)
       end
 
+      @options = options
     end
 
     def exists?
@@ -169,6 +169,7 @@ module Waistband
       page, page_size = get_page_info body_hash
       body_hash = parse_search_body(body_hash)
       search_hash = {index: config_name, body: body_hash}
+      search_hash[:type] = @options[:type]  if @options[:type]
 
       search_hash[:from] = body_hash[:from] if body_hash[:from]
       search_hash[:size] = body_hash[:size] if body_hash[:size]
