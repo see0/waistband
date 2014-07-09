@@ -11,6 +11,10 @@ module Waistband
       @search_hash = search_hash
     end
 
+    def raw
+      @search_hash
+    end
+
     def aggs
       raise ::Waistband::Errors::NoSearchHits.new("No aggregations!") unless @search_hash['aggregations']
       @search_hash['aggregations'].deep_dup
