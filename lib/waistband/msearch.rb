@@ -12,6 +12,10 @@ module WaistBand
       @query_arr = query_arr
     end
 
+    def add_raw_query(query)
+      @query_arr << query
+    end
+
     def add_query(index, query, options={})
       b = ::Waistband::Index.new(index, options)
       @query_arr << b.search_builder(query)
