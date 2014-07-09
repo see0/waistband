@@ -11,6 +11,15 @@ module Waistband
       @search_hash = search_hash
     end
 
+    def aggs
+      raise ::Waistband::Errors::NoSearchHits.new("No aggregations!") unless @search_hash['aggregations']
+      @search_hash['aggregations'].deep_dup
+    end
+
+    def paginate_info
+      {per_page: @page_size, page: @page, total: total_results}
+    end
+
     def hits
       raise ::Waistband::Errors::NoSearchHits.new("No search hits!") unless @search_hash['hits']
       @search_hash['hits']['hits']

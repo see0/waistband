@@ -17,12 +17,12 @@ module Waistband
       # subindexes checks
       if options['version'].present?
         # version
-        @version  = options['version']
-        @subs     = ['version', @version]
+        @version = options['version']
+        @subs = ['version', @version]
       elsif options['subs'].present?
         # subs
         @subs = [options['subs']] if options['subs'].present?
-        @subs = @subs.flatten     if @subs.is_a?(Array)
+        @subs = @subs.flatten if @subs.is_a?(Array)
       end
 
     end
@@ -45,16 +45,16 @@ module Waistband
       mapping_hash = {type => {properties: properties}}
 
       client.indices.put_mapping(
-        index: config_name,
-        type: type,
-        body: mapping_hash
+          index: config_name,
+          type: type,
+          body: mapping_hash
       )
     end
 
     def update_settings(settings)
       client.indices.put_settings(
-        index: config_name,
-        body: settings
+          index: config_name,
+          body: settings
       )
     end
 
@@ -93,10 +93,10 @@ module Waistband
       body_hash = stringify_all(body_hash) if @stringify
 
       saved = client.index(
-        index: config_name,
-        type: _type,
-        id: id,
-        body: body_hash
+          index: config_name,
+          type: _type,
+          id: id,
+          body: body_hash
       )
 
       saved['_id'].present?
@@ -135,9 +135,9 @@ module Waistband
       type = options[:_type] || default_type_name
 
       client.get(
-        index: config_name,
-        type: type,
-        id: id
+          index: config_name,
+          type: type,
+          id: id
       ).with_indifferent_access
     end
 
@@ -152,16 +152,30 @@ module Waistband
       type = options[:_type] || default_type_name
 
       client.delete(
-        index: config_name,
-        id: id,
-        type: type
+          index: config_name,
+          id: id,
+          type: type
       )
     end
 
+    def msearch(query_arr)
+      query_arr.map! { |q| parse_search_body q }
+      search_hash = client.msearch body: query_arr
+
+      search_hash.each_with_index.map do |v, k|
+        if query_arr[k][:from].present? && query_arr[k][:size].present?
+          ::Waistband::SearchResults.new(v, page: (query_arr[k][:from]/query_arr[k][:size]) + 1, page_size: query_arr[k][:size])
+        else
+          ::Waistband::SearchResults.new(v)
+        end
+      end
+    end
+
+
     def search(body_hash)
       page, page_size = get_page_info body_hash
-      body_hash       = parse_search_body(body_hash)
-      search_hash     = {index: config_name, body: body_hash}
+      body_hash = parse_search_body(body_hash)
+      search_hash = {index: config_name, body: body_hash}
 
       search_hash[:from] = body_hash[:from] if body_hash[:from]
       search_hash[:size] = body_hash[:size] if body_hash[:size]
@@ -174,16 +188,16 @@ module Waistband
     def alias(alias_name)
       alias_name = full_alias_name alias_name
       client.indices.put_alias(
-        index: config_name,
-        name: alias_name
+          index: config_name,
+          name: alias_name
       )
     end
 
     def alias_exists?(alias_name)
       alias_name = full_alias_name alias_name
       client.indices.exists_alias(
-        index: config_name,
-        name: alias_name
+          index: config_name,
+          name: alias_name
       )
     end
 
@@ -197,69 +211,70 @@ module Waistband
 
     private
 
-      def get_page_info(body_hash)
-        page = body_hash[:page]
-        page_size = body_hash[:page_size]
-        [page, page_size]
+    def get_page_info(body_hash)
+      page = body_hash[:page]
+      page_size = body_hash[:page_size]
+      [page, page_size]
+    end
+
+    def parse_search_body(body_hash)
+      body_hash = body_hash.with_indifferent_access
+
+      page = body_hash.delete(:page)
+      page_size = body_hash.delete(:page_size)
+
+      if page || page_size
+        page ||= 1
+        page = page.to_i
+        page_size ||= 20
+        body_hash[:from] = page_size * (page - 1) unless body_hash[:from]
+        body_hash[:size] = page_size unless body_hash[:size]
       end
 
-      def parse_search_body(body_hash)
-        body_hash = body_hash.with_indifferent_access
+      body_hash
+    end
 
-        page = body_hash.delete(:page)
-        page_size = body_hash.delete(:page_size)
+    def full_alias_name(alias_name)
+      alias_name
+    end
 
-        if page || page_size
-          page ||= 1
-          page = page.to_i
-          page_size ||= 20
-          body_hash[:from] = page_size * (page - 1) unless body_hash[:from]
-          body_hash[:size] = page_size              unless body_hash[:size]
-        end
+    # def custom_name?
+    #   !!config['name']
+    # end
 
-        body_hash
-      end
+    def stringify_all(data)
+      data = if data.is_a? Array
+               ::Waistband::StringifiedArray.new data
+             elsif data.is_a? Hash
+               ::Waistband::StringifiedHash.new_from data
+             end
 
-      def full_alias_name(alias_name)
-          alias_name
-      end
+      data = data.stringify_all if data.respond_to? :stringify_all
+      data
+    end
 
-      # def custom_name?
-      #   !!config['name']
-      # end
+    # def types
+    #   config.try(:[], 'mappings').try(:keys) || []
+    # end
 
-      def stringify_all(data)
-        data = if data.is_a? Array
-          ::Waistband::StringifiedArray.new data
-        elsif data.is_a? Hash
-          ::Waistband::StringifiedHash.new_from data
-        end
+    def default_type_name
+      @index_name.singularize
+    end
 
-        data = data.stringify_all if data.respond_to? :stringify_all
-        data
-      end
+    # def settings
+    #   settings = config['settings']['index'].except('number_of_shards')
+    #   {index: settings}
+    # end
 
-      # def types
-      #   config.try(:[], 'mappings').try(:keys) || []
-      # end
+    def config_name
+      @subs ? "#{base_config_name}__#{@subs.join('_')}" : base_config_name
+    end
 
-      def default_type_name
-        @index_name.singularize
-      end
+    def base_config_name
+      # return config['name'] if config['name']
+      "#{@index_name}"
+    end
 
-      # def settings
-      #   settings = config['settings']['index'].except('number_of_shards')
-      #   {index: settings}
-      # end
-
-      def config_name
-        @subs ? "#{base_config_name}__#{@subs.join('_')}" : base_config_name
-      end
-
-      def base_config_name
-        # return config['name'] if config['name']
-        "#{@index_name}"
-      end
 
     # /private
 
