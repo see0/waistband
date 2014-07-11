@@ -160,7 +160,7 @@ module Waistband
     end
 
     def search(body_hash)
-      search_hash = search_builder(body_hash)
+      search_hash, page , page_size = search_builder(body_hash)
       search_hash = client.search(search_hash)
 
       ::Waistband::SearchResults.new(search_hash, page: page, page_size: page_size)
@@ -175,7 +175,7 @@ module Waistband
       search_hash[:from] = body_hash[:from] if body_hash[:from]
       search_hash[:size] = body_hash[:size] if body_hash[:size]
 
-      search_hash
+      return search_hash, page , page_size
     end
 
     def alias(alias_name)
