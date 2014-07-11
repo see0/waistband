@@ -14,7 +14,7 @@ module Waistband
     end
 
     def add_raw_query(query)
-      @query_arr << query
+      @query_arr << {body: query} #for compatibility
     end
 
     def add_query(index, query, options={})
