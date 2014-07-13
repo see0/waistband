@@ -42,8 +42,10 @@ module Waistband
 
     def query_body
       @query_arr.map do |e|
-        e[:search] = e[:body].to_hash
-        e.delete(:body)
+        if e[:search].blank? && e[:body].any?
+          e[:search] = e[:body].to_hash
+          e.delete(:body)
+        end
         e.to_hash
       end
     end
