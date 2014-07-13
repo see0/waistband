@@ -160,22 +160,23 @@ module Waistband
     end
 
     def search(body_hash)
-      search_hash, page , page_size = search_builder(body_hash)
+      search_hash, page, page_size = search_builder(body_hash)
       search_hash = client.search(search_hash)
 
       ::Waistband::SearchResults.new(search_hash, page: page, page_size: page_size)
     end
 
-    def search_builder(body_hash)
+    def search_builder(body_hash, search_hash_only = false)
       page, page_size = get_page_info body_hash
       body_hash = parse_search_body(body_hash)
       search_hash = {index: config_name, body: body_hash}
-      search_hash[:type] = @options[:type]  if @options[:type]
+      search_hash[:type] = @options[:type] if @options[:type]
 
       search_hash[:from] = body_hash[:from] if body_hash[:from]
       search_hash[:size] = body_hash[:size] if body_hash[:size]
 
-      return search_hash, page , page_size
+      return search_hash if search_hash_only
+      return search_hash, page, page_size
     end
 
     def alias(alias_name)
