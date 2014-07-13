@@ -166,6 +166,14 @@ module Waistband
       ::Waistband::SearchResults.new(search_hash, page: page, page_size: page_size)
     end
 
+
+    def find_builder(id, options={})
+      val = {index: config_name, id: id}
+      val[:type] = options[:type] if options[:type]
+      val
+    end
+
+
     def search_builder(body_hash, search_hash_only = false)
       page, page_size = get_page_info body_hash
       body_hash = parse_search_body(body_hash)
