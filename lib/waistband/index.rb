@@ -206,8 +206,8 @@ module Waistband
     private
 
     def get_page_info(body_hash)
-      page = body_hash[:page]
-      page_size = body_hash[:page_size]
+      page = body_hash[:page]|| @options[:page]
+      page_size = body_hash[:page_size] || @options[:page_size]
       [page, page_size]
     end
 
