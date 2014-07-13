@@ -25,7 +25,7 @@ module Waistband
         @subs = @subs.flatten if @subs.is_a?(Array)
       end
 
-      @options = options
+      @options = options.with_indifferent_access
     end
 
     def exists?
