@@ -181,6 +181,7 @@ module Waistband
       search_hash = {index: config_name, body: body_hash}
       search_hash[:type] = @options[:type] if @options[:type]
       search_hash[:type] = body_hash.delete(:type) if body_hash[:type]
+      search_hash[:type] = body_hash.delete('type') if body_hash['type']
 
       search_hash[:from] = body_hash[:from] if body_hash[:from]
       search_hash[:size] = body_hash[:size] if body_hash[:size]
