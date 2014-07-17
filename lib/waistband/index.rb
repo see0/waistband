@@ -168,9 +168,11 @@ module Waistband
 
 
     def find_builder(id, options={})
-      val = {index: config_name, id: id}
-      val[:type] = @options[:type] if @options[:type]
-      val[:type] = options[:type] if options[:type]
+      val = {index: config_name}
+      query = {ids: {values: Array(id)}}
+      query[:ids][:type] = @options[:type] if @options[:type]
+      query[:ids][:type] = options[:type] if options[:type]
+      val[:query] = query
       val
     end
 
