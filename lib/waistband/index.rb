@@ -28,6 +28,10 @@ module Waistband
       @options = options.with_indifferent_access
     end
 
+    def name
+      @index_name
+    end
+
     def exists?
       client.indices.exists index: config_name
     end
