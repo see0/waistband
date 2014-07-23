@@ -26,7 +26,7 @@ module Waistband
 
     def hits
       raise ::Waistband::Errors::NoSearchHits.new("No search hits!") unless @search_hash['hits']
-      @search_hash['hits']['hits']
+      @search_hash['hits']['hits'] = @search_hash['hits']['hits'].collect{ |r| add_id_to_source(r) }
     end
 
     def results
@@ -60,6 +60,13 @@ module Waistband
     def respond_to_missing?(method_name, include_private = false)
       return true if @search_hash.keys.include?(method_name.to_s)
       super
+    end
+
+    protected
+
+    def add_id_to_source(hit)
+      hit['_source']['_id'] = hit['_id']
+      hit
     end
 
   end
